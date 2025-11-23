@@ -30,7 +30,7 @@ class _UserRoleSelectionPageState extends State<UserRoleSelectionPage> {
     String routeName;
     if (_selectedRole == UserRole.camper) {
       // Camper navigates directly to the Sign Up form
-      routeName = AppRoutes.signUp;
+      routeName = AppRoutes.login;
     } else {
       // Owner navigates to the License Verification page first
       routeName = AppRoutes.license;
@@ -258,25 +258,25 @@ class _UserRoleSelectionPageState extends State<UserRoleSelectionPage> {
                   ),
 
                   // --- Log In Link ---
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 24.0),
-                    child: TextButton(
-                      onPressed: () {
-                        // Navigate to the Login Page
-                        Navigator.of(context).pushReplacementNamed(AppRoutes.login);
-                      },
-                      child: const Text(
-                        'Already have an account? Log In',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: lightTextSecondary, // Changed to light gray for contrast
-                          fontWeight: FontWeight.w500,
-                          decoration: TextDecoration.underline,
-                          decorationColor: lightTextSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Padding(
+                  //   padding: const EdgeInsets.only(bottom: 24.0),
+                  //   child: TextButton(
+                  //     onPressed: () {
+                  //       // Navigate to the Login Page
+                  //       Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+                  //     },
+                  //     child: const Text(
+                  //       'Already have an account? Log In',
+                  //       style: TextStyle(
+                  //         fontSize: 14,
+                  //         color: lightTextSecondary, // Changed to light gray for contrast
+                  //         fontWeight: FontWeight.w500,
+                  //         decoration: TextDecoration.underline,
+                  //         decorationColor: lightTextSecondary,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),

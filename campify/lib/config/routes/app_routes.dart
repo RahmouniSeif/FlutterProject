@@ -1,4 +1,5 @@
 import 'package:campify/modules/auth/presentation/pages/login_page.dart';
+import 'package:campify/modules/home/homePage.dart';
 import 'package:flutter/material.dart';
 
 // Import all necessary page widgets from the modules
@@ -40,7 +41,7 @@ abstract class AppRoutes {
 
     // --- Other Module Routes (Examples) ---
     // Example: A main tab screen after successful login
-    home: (context) => const Placeholder(child: Text('Home Screen')),
+    home: (context) => HomePage(),
     marketplace: (context) => const Placeholder(child: Text('Marketplace Screen')),
   };
 }
