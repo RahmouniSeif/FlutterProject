@@ -190,6 +190,10 @@ class ApiClient {
           }
           final valueString = '$value'.toLowerCase();
           return valueString == 'true' || valueString == '1';
+        case 'AdmLicense':
+          return AdmLicense.fromJson(value);
+        case 'LicenseCheckResponse':
+          return LicenseCheckResponse.fromJson(value);
         case 'LoginRequest':
           return LoginRequest.fromJson(value);
         case 'User':

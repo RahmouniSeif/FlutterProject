@@ -6,6 +6,7 @@ import '../../../../config/routes/app_routes.dart';
 // (LoginRequest, User), and exceptions (ApiException) must be available here.
 import 'package:campify/GeneratedServices/api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:campify/core/utils/globals.dart';
 
 // Define colors based on the Figma/Tailwind config for perfect fidelity
 const Color primaryGreen = Color(0xFF2C5F2D); // Deep Forest Green (primary)
@@ -52,8 +53,10 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       // 2. Initialize the API client and use the new UserControllerApi
-      final apiClient = ApiClient();
-      final userControllerApi = UserControllerApi(apiClient);
+      // final apiClient = ApiClient();
+      final apiClient = await primeHeaders();
+
+      final userControllerApi = UserManagementApi(apiClient);
 
       // 3. Prepare the request object (using the generated LoginRequest model)
       final loginRequest = LoginRequest(

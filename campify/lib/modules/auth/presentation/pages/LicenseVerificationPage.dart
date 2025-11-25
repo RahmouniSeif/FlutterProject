@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For TextInputFormatter
-import 'dart:ui'; // For BackdropFilter
-import '../../../../config/routes/app_routes.dart'; // Import to use navigation
+import 'package:flutter/services.dart';
+import 'dart:ui';
+import 'package:http/http.dart';
+import '../../../../config/routes/app_routes.dart';
+import 'package:campify/GeneratedServices/api.dart';
+
+// --- API Client Initialization ---
+final ApiClient _apiClient = ApiClient();
+final AdmLicenseControllerApi licenseApi = AdmLicenseControllerApi(_apiClient);
 
 // --- Color Palette based on the Figma/HTML snippet ---
-const Color primaryGreen = Color(0xFF2C5F2D); // Deep Forest Green (primary)
+const Color primaryGreen = Color(0xFF2C5F2D);
+const Color lightTextColor = Colors.white;
+const Color subtextColor = Color(0xFFE0E0E0);
+const Color errorRed = Color(0xFFC84B31);
+const Color inputFillColor = Colors.white10;
+const Color inputBorderColor = Colors.white24;
 const Color darkTextColor = Color(0xFF102213); // Near black text
-const Color lightTextColor = Colors.white; // Main text color on dark background
-const Color subtextColor = Color(0xFFE0E0E0); // Lighter text (subtext/description)
-const Color errorRed = Color(0xFFC84B31); // Error color
-const Color inputFillColor = Colors.white10; // Input background (white/10 opacity)
-const Color inputBorderColor = Colors.white24; // Input border (white/24 opacity)
+
+// Define UUID constants
+const int uuidRawLength = 32; // 32 characters (hex digits)
+const int uuidFormattedLength = 36; // 32 characters + 4 dashes
 
 class LicenseVerificationPage extends StatefulWidget {
   const LicenseVerificationPage({super.key});
@@ -22,13 +32,17 @@ class LicenseVerificationPage extends StatefulWidget {
 class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
   // State variables for form management and validation
   final TextEditingController _controller = TextEditingController();
+  final TextEditingController _licenseController = TextEditingController();
+
   String? _errorMessage;
   bool _isLoading = false;
+
+  // Regex to check if the raw key is valid hex characters (0-9, a-f)
+  final RegExp _hexRegex = RegExp(r'^[0-9A-F]+$');
 
   @override
   void initState() {
     super.initState();
-    // Add listener for real-time validation and input formatting
     _controller.addListener(_validateKeyOnChange);
   }
 
@@ -39,13 +53,15 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
     super.dispose();
   }
 
-  // Input formatter that adds dashes to the 16-character key: XXXX-XXXX-XXXX-XXXX
+  // Input formatter that adds dashes to the UUID: 8-4-4-4-12
   String _formatKey(String text) {
     String rawText = text.toUpperCase().replaceAll('-', '');
     final StringBuffer buffer = StringBuffer();
+    final List<int> groups = [8, 12, 16, 20]; // Dash positions relative to raw index
+
     for (int i = 0; i < rawText.length; i++) {
       buffer.write(rawText[i]);
-      if (i % 4 == 3 && i != rawText.length - 1) {
+      if (groups.contains(i + 1) && i + 1 < uuidRawLength) {
         buffer.write('-');
       }
     }
@@ -56,32 +72,42 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
   void _validateKeyOnChange() {
     String rawKey = _controller.text.replaceAll('-', '').trim();
 
-    // 1. Enforce max length of 16 raw characters
-    if (rawKey.length > 16) {
-      final newText = _formatKey(rawKey.substring(0, 16));
-      _controller.value = _controller.value.copyWith(
-        text: newText,
-        selection: TextSelection.collapsed(offset: newText.length),
-      );
-      rawKey = rawKey.substring(0, 16);
+    // 1. Enforce max length of 32 raw characters
+    if (rawKey.length > uuidRawLength) {
+      rawKey = rawKey.substring(0, uuidRawLength);
     }
+
+    // Ensure only valid hexadecimal characters are kept (optional, but good practice)
+    rawKey = rawKey.replaceAll(RegExp(r'[^0-9A-Fa-f]'), '');
 
     // 2. Format the input text (add dashes)
     final formattedText = _formatKey(rawKey);
 
     // Check if re-formatting is needed to maintain structure/cursor position
     if (formattedText != _controller.text) {
-      // Find the current cursor position index relative to the raw text
+      // Logic to maintain cursor position
       int rawCursorIndex = _controller.text.substring(0, _controller.selection.start).replaceAll('-', '').length;
 
-      // Determine the new cursor position in the formatted text
       int newCursorIndex = 0;
       int dashCount = 0;
-      for (int i = 0; i < rawCursorIndex; i++) {
-        newCursorIndex++;
-        if ((i + 1) % 4 == 0) dashCount++;
+      final List<int> dashGroups = [8, 4, 4, 4, 12];
+
+      int currentRawCount = 0;
+      for (int groupSize in dashGroups) {
+        if (rawCursorIndex > currentRawCount) {
+          int countInGroup = rawCursorIndex - currentRawCount;
+          newCursorIndex += countInGroup;
+          currentRawCount += countInGroup;
+
+          if (currentRawCount < rawCursorIndex) {
+            dashCount++;
+            newCursorIndex++;
+          }
+        }
       }
-      newCursorIndex += dashCount; // Add back dashes before the cursor
+
+      // Fallback for edge cases, usually should rely on logic above
+      if (newCursorIndex > formattedText.length) newCursorIndex = formattedText.length;
 
       // Apply new formatted value and cursor position
       _controller.value = _controller.value.copyWith(
@@ -91,52 +117,51 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
     }
 
     // 3. Clear/set error state based on length
-    if (_errorMessage != null && rawKey.length == 16) {
-      // Clear error when the user corrects the length
+    if (_errorMessage != null && rawKey.length == uuidRawLength) {
       setState(() {
         _errorMessage = null;
       });
     }
   }
 
-  // Simulate license key verification
+  // --- API INTEGRATION LOGIC ---
   Future<void> _verifyLicenseKey() async {
-    final rawKey = _controller.text.replaceAll('-', '').trim();
-
-    // Final validation check
-    if (rawKey.length != 16) {
-      setState(() {
-        _errorMessage = 'License key must be exactly 16 alphanumeric characters.';
-      });
-      return;
-    }
-
     setState(() {
       _isLoading = true;
       _errorMessage = null; // Clear previous errors
     });
 
     try {
-      // --- Simulate API Call ---
-      await Future.delayed(const Duration(seconds: 2));
+      // ** 1. Call the generated service method **
+      // The API call uses the raw 32-character key if the API expects it without dashes
 
-      // Simple mock logic: accept a specific key, reject others
-      if (rawKey == '1234567890123456') {
-        // Verification successful
+      final license = _licenseController.text;
+      final LicenseCheckResponse? response = await licenseApi.checkLicenseStatus(license);
+
+      if (!mounted) return;
+
+      // ** 2. Handle Successful API Call (HTTP 200) **
+      if (response != null && response.valid == true) {
+        // License is VALID
         if (mounted) {
           // Navigate to the Owner Sign Up page
-          // Using pushReplacementNamed to prevent coming back to this screen
-          Navigator.of(context).pushReplacementNamed(AppRoutes.signUp);
+          Navigator.of(context).pushReplacementNamed(AppRoutes.login);
         }
       } else {
-        // Verification failed
+        // License is INVALID
         setState(() {
-          _errorMessage = 'The license key is invalid or has expired. Please check and try again.';
+          _errorMessage = response?.message ?? 'The license key is invalid or has expired. Please check and try again.';
         });
       }
-    } catch (e) {
+    } on ApiException catch (e) {
+      // ** 3. Handle API Errors (e.g., HTTP 4xx, 5xx status codes) **
       setState(() {
-        _errorMessage = 'An error occurred during verification. Check your connection.';
+        _errorMessage = 'Verification failed (Status ${e.code}). Please check your key or network connection.';
+      });
+    } catch (e) {
+      // ** 4. Handle General Errors (e.g., network timeout, unexpected parsing errors) **
+      setState(() {
+        _errorMessage = 'An unexpected error occurred during verification. Check your network connection.';
       });
     } finally {
       setState(() {
@@ -146,15 +171,16 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
   }
 
   // Helper widget to build the custom license key input field
+// Helper widget to build the custom license key input field
   Widget _buildLicenseKeyField() {
     final bool hasError = _errorMessage != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label
+        // Label... (omitted for brevity)
         const Text(
-          'License Key',
+          'License Key (UUID)',
           style: TextStyle(
             color: lightTextColor, // White label
             fontSize: 16,
@@ -191,19 +217,27 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
                   controller: _controller,
                   keyboardType: TextInputType.text,
                   textCapitalization: TextCapitalization.characters,
+                  // Keep this for vertical alignment
                   textAlignVertical: TextAlignVertical.center,
                   enabled: !_isLoading,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(uuidFormattedLength),
+                  ],
                   decoration: const InputDecoration(
-                    hintText: 'XXXX-XXXX-XXXX-XXXX',
+                    hintText: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX',
                     hintStyle: TextStyle(color: lightTextColor, letterSpacing: 1.5),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 15),
+                    // --- CORRECTION 1: Adjust contentPadding ---
+                    // Use symmetric vertical padding to center the text manually
+                    // while maintaining the Row's alignment.
+                    contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 0),
                   ),
                   style: const TextStyle(
                     color: lightTextColor, // White input text
-                    fontSize: 18,
+                    // --- CORRECTION 2: Set readable fontSize ---
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    letterSpacing: 2.0, // Wider spacing for key visibility
+                    letterSpacing: 1.5, // Reduced letterSpacing slightly for UUID length
                   ),
                 ),
               ),
@@ -211,26 +245,15 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
           ),
         ),
 
-        // Error Message
-        if (_errorMessage != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0, left: 4.0),
-            child: Text(
-              _errorMessage!,
-              style: const TextStyle(
-                color: errorRed,
-                fontSize: 13,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ),
+        // Error Message... (omitted for brevity)
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isKeyValidLength = _controller.text.replaceAll('-', '').trim().length == 16;
+    // Check against the raw length (32) for button enablement
+    final bool isKeyValidLength = _controller.text.replaceAll('-', '').trim().length == uuidRawLength;
     final bool isButtonEnabled = isKeyValidLength && !_isLoading;
 
     return Scaffold(
@@ -242,7 +265,6 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
             child: Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  // Placeholder image URL, assuming it provides the moody forest look
                   image: AssetImage('assets/images/licensebg.png'),
                   fit: BoxFit.cover,
                 ),
@@ -287,12 +309,20 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
                       const SizedBox(height: 48),
 
                       // --- License Key Input ---
-                      _buildLicenseKeyField(),
+                      _buildTextField(
+                        controller: _licenseController, // Linked
+                        label: 'Password',
+                        hint: 'Enter your password',
+                        icon: Icons.key,
+                        isPassword: false,
+                      ),
+
+                      // _buildLicenseKeyField(),
                       const SizedBox(height: 32),
 
                       // --- Validate Key Button ---
                       ElevatedButton(
-                        onPressed: isButtonEnabled ? _verifyLicenseKey : null,
+                        onPressed: _verifyLicenseKey,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryGreen,
                           disabledBackgroundColor: primaryGreen.withOpacity(0.5),
@@ -315,7 +345,19 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
                                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
                       ),
-
+                      // Error Message
+                      if (_errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0, left: 4.0),
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              color: errorRed,
+                              fontSize: 13,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 24),
 
                       // --- Help Link ---
@@ -323,8 +365,8 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
                         onPressed: _isLoading
                             ? null
                             : () {
+                                // TODO: Implement contact support link/modal navigation
                                 print('Contact support link tapped');
-                                // TODO: Implement contact support link/modal
                               },
                         child: Text(
                           "Need help? Contact Support",
@@ -367,6 +409,54 @@ class _LicenseVerificationPageState extends State<LicenseVerificationPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // 🛠️ Helper widget for custom form text fields
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required bool isPassword,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: darkTextColor, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller, // Linked controller
+          obscureText: isPassword,
+          keyboardType: keyboardType,
+          style: const TextStyle(color: darkTextColor),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: darkTextColor.withOpacity(0.6)),
+            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            prefixIcon: Icon(icon, color: primaryGreen), // Icon inside the field
+            suffixIcon: isPassword ? const Icon(Icons.visibility_outlined, color: primaryGreen) : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: primaryGreen, width: 2),
+            ),
+            filled: true,
+            fillColor: inputFillColor,
+          ),
+        ),
+      ],
     );
   }
 }

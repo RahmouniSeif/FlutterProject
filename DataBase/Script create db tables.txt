@@ -200,3 +200,13 @@ CREATE INDEX idx_reservations_center_dates ON reservations(center_id, start_date
 CREATE INDEX idx_products_seller_id ON products(seller_id);
 CREATE INDEX idx_reviews_entity ON reviews(entity_type, center_id, product_id);
 CREATE INDEX idx_events_date ON events(event_date);
+
+CREATE TABLE admLicense (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    activatedDate DATE,
+    expireDate DATE,
+    userId UUID REFERENCES users(user_id),
+    userNumber INTEGER,
+    activeUserNumber INTEGER,
+    Description TEXT
+);

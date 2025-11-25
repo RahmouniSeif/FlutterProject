@@ -10,17 +10,41 @@
 
 part of openapi.api;
 
-class User {
-  /// Returns a new [User] instance.
-  User({
+class AdmLicense {
+  /// Returns a new [AdmLicense] instance.
+  AdmLicense({
+    this.id,
+    this.activatedDate,
+    this.expireDate,
     this.userId,
-    this.name,
-    this.email,
-    this.phone,
-    this.password,
-    this.userType,
-    this.createdAt,
+    this.userNumber,
+    this.activeUserNumber,
+    this.description,
   });
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? id;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  DateTime? activatedDate;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  DateTime? expireDate;
 
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
@@ -36,7 +60,7 @@ class User {
   /// source code must fall back to having a nullable type.
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
-  String? name;
+  int? userNumber;
 
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
@@ -44,7 +68,7 @@ class User {
   /// source code must fall back to having a nullable type.
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
-  String? email;
+  int? activeUserNumber;
 
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
@@ -52,86 +76,62 @@ class User {
   /// source code must fall back to having a nullable type.
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
-  String? phone;
-
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
-  String? password;
-
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
-  String? userType;
-
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
-  DateTime? createdAt;
+  String? description;
 
   @override
-  bool operator ==(Object other) => identical(this, other) || other is User &&
+  bool operator ==(Object other) => identical(this, other) || other is AdmLicense &&
+     other.id == id &&
+     other.activatedDate == activatedDate &&
+     other.expireDate == expireDate &&
      other.userId == userId &&
-     other.name == name &&
-     other.email == email &&
-     other.phone == phone &&
-     other.password == password &&
-     other.userType == userType &&
-     other.createdAt == createdAt;
+     other.userNumber == userNumber &&
+     other.activeUserNumber == activeUserNumber &&
+     other.description == description;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
+    (id == null ? 0 : id!.hashCode) +
+    (activatedDate == null ? 0 : activatedDate!.hashCode) +
+    (expireDate == null ? 0 : expireDate!.hashCode) +
     (userId == null ? 0 : userId!.hashCode) +
-    (name == null ? 0 : name!.hashCode) +
-    (email == null ? 0 : email!.hashCode) +
-    (phone == null ? 0 : phone!.hashCode) +
-    (password == null ? 0 : password!.hashCode) +
-    (userType == null ? 0 : userType!.hashCode) +
-    (createdAt == null ? 0 : createdAt!.hashCode);
+    (userNumber == null ? 0 : userNumber!.hashCode) +
+    (activeUserNumber == null ? 0 : activeUserNumber!.hashCode) +
+    (description == null ? 0 : description!.hashCode);
 
   @override
-  String toString() => 'User[userId=$userId, name=$name, email=$email, phone=$phone, password=$password, userType=$userType, createdAt=$createdAt]';
+  String toString() => 'AdmLicense[id=$id, activatedDate=$activatedDate, expireDate=$expireDate, userId=$userId, userNumber=$userNumber, activeUserNumber=$activeUserNumber, description=$description]';
 
   Map<String, dynamic> toJson() {
     final _json = <String, dynamic>{};
+    if (id != null) {
+      _json[r'id'] = id;
+    }
+    if (activatedDate != null) {
+      _json[r'activatedDate'] = _dateFormatter.format(activatedDate!.toUtc());
+    }
+    if (expireDate != null) {
+      _json[r'expireDate'] = _dateFormatter.format(expireDate!.toUtc());
+    }
     if (userId != null) {
       _json[r'userId'] = userId;
     }
-    if (name != null) {
-      _json[r'name'] = name;
+    if (userNumber != null) {
+      _json[r'userNumber'] = userNumber;
     }
-    if (email != null) {
-      _json[r'email'] = email;
+    if (activeUserNumber != null) {
+      _json[r'activeUserNumber'] = activeUserNumber;
     }
-    if (phone != null) {
-      _json[r'phone'] = phone;
-    }
-    if (password != null) {
-      _json[r'password'] = password;
-    }
-    if (userType != null) {
-      _json[r'userType'] = userType;
-    }
-    if (createdAt != null) {
-      _json[r'createdAt'] = createdAt!.toUtc().toIso8601String();
+    if (description != null) {
+      _json[r'description'] = description;
     }
     return _json;
   }
 
-  /// Returns a new [User] instance and imports its values from
+  /// Returns a new [AdmLicense] instance and imports its values from
   /// [value] if it's a [Map], null otherwise.
   // ignore: prefer_constructors_over_static_methods
-  static User? fromJson(dynamic value) {
+  static AdmLicense? fromJson(dynamic value) {
     if (value is Map) {
       final json = value.cast<String, dynamic>();
 
@@ -140,30 +140,30 @@ class User {
       // Note 2: this code is stripped in release mode!
       assert(() {
         requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "User[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "User[$key]" has a null value in JSON.');
+          assert(json.containsKey(key), 'Required key "AdmLicense[$key]" is missing from JSON.');
+          assert(json[key] != null, 'Required key "AdmLicense[$key]" has a null value in JSON.');
         });
         return true;
       }());
 
-      return User(
+      return AdmLicense(
+        id: mapValueOfType<String>(json, r'id'),
+        activatedDate: mapDateTime(json, r'activatedDate', ''),
+        expireDate: mapDateTime(json, r'expireDate', ''),
         userId: mapValueOfType<String>(json, r'userId'),
-        name: mapValueOfType<String>(json, r'name'),
-        email: mapValueOfType<String>(json, r'email'),
-        phone: mapValueOfType<String>(json, r'phone'),
-        password: mapValueOfType<String>(json, r'password'),
-        userType: mapValueOfType<String>(json, r'userType'),
-        createdAt: mapDateTime(json, r'createdAt', ''),
+        userNumber: mapValueOfType<int>(json, r'userNumber'),
+        activeUserNumber: mapValueOfType<int>(json, r'activeUserNumber'),
+        description: mapValueOfType<String>(json, r'description'),
       );
     }
     return null;
   }
 
-  static List<User>? listFromJson(dynamic json, {bool growable = false,}) {
-    final result = <User>[];
+  static List<AdmLicense>? listFromJson(dynamic json, {bool growable = false,}) {
+    final result = <AdmLicense>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
-        final value = User.fromJson(row);
+        final value = AdmLicense.fromJson(row);
         if (value != null) {
           result.add(value);
         }
@@ -172,12 +172,12 @@ class User {
     return result.toList(growable: growable);
   }
 
-  static Map<String, User> mapFromJson(dynamic json) {
-    final map = <String, User>{};
+  static Map<String, AdmLicense> mapFromJson(dynamic json) {
+    final map = <String, AdmLicense>{};
     if (json is Map && json.isNotEmpty) {
       json = json.cast<String, dynamic>(); // ignore: parameter_assignments
       for (final entry in json.entries) {
-        final value = User.fromJson(entry.value);
+        final value = AdmLicense.fromJson(entry.value);
         if (value != null) {
           map[entry.key] = value;
         }
@@ -186,13 +186,13 @@ class User {
     return map;
   }
 
-  // maps a json object with a list of User-objects as value to a dart map
-  static Map<String, List<User>> mapListFromJson(dynamic json, {bool growable = false,}) {
-    final map = <String, List<User>>{};
+  // maps a json object with a list of AdmLicense-objects as value to a dart map
+  static Map<String, List<AdmLicense>> mapListFromJson(dynamic json, {bool growable = false,}) {
+    final map = <String, List<AdmLicense>>{};
     if (json is Map && json.isNotEmpty) {
       json = json.cast<String, dynamic>(); // ignore: parameter_assignments
       for (final entry in json.entries) {
-        final value = User.listFromJson(entry.value, growable: growable,);
+        final value = AdmLicense.listFromJson(entry.value, growable: growable,);
         if (value != null) {
           map[entry.key] = value;
         }
