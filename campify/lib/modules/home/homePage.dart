@@ -1,3 +1,4 @@
+import 'package:campify/modules/auth/presentation/pages/userProfilePage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui'; // Needed for ImageFilter.blur in BackdropFilter
@@ -185,12 +186,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           // 3. Bottom Navigation Bar (Fixed position)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _buildBottomNavBar(isDarkMode),
-          ),
         ],
       ),
+      bottomNavigationBar: _buildBottomNavBar(isDarkMode),
     );
   }
 
@@ -549,17 +547,24 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: ClipRRect(
         child: BackdropFilter(
-          // Use ImageFilter.blur for the actual blur effect
           filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
           child: Container(
-            color: navBackgroundColor, // Apply the semi-transparent color here
+            color: navBackgroundColor,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(Icons.home, 'Home', primary, true),
-                _buildNavItem(Icons.map, 'Discover', inactiveColor, false),
-                _buildNavItem(Icons.favorite, 'Favorites', inactiveColor, false),
-                _buildNavItem(Icons.person, 'Profile', inactiveColor, false),
+                _buildNavItem(Icons.home, 'Home', primary, true, () {
+                  // Currently on home, do nothing or scroll to top
+                }),
+                _buildNavItem(Icons.map, 'Discover', inactiveColor, false, () {}),
+                _buildNavItem(Icons.favorite, 'Favorites', inactiveColor, false, () {}),
+                // 🚀 Implemented Navigation Here
+                _buildNavItem(Icons.person, 'Profile', inactiveColor, false, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const UserProfilePage()),
+                  );
+                }),
               ],
             ),
           ),
@@ -568,11 +573,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, Color color, bool isSelected) {
+// Modified _buildNavItem to accept an onTap callback
+  Widget _buildNavItem(IconData icon, String label, Color color, bool isSelected, VoidCallback onTap) {
     return InkWell(
-      onTap: () {
-        // Handle navigation
-      },
+      onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,

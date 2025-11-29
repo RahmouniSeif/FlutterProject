@@ -73,12 +73,13 @@ class _LoginPageState extends State<LoginPage> {
 
       // Check if the user object was successfully returned and has a unique ID
       if (loggedInUser != null && loggedInUser.userId != null) {
-        // ✅ Successful Login - Handle Authentication and Navigation
-        // TODO: Store authentication data (e.g., token, user ID) securely using data from 'loggedInUser'
-        print('Login Successful! Logged in as user ID: ${loggedInUser.userId}');
         await prefs.setString("userName", loggedInUser.name.toString());
-        // Use pushReplacementNamed to prevent going back to login on back button
-        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        await prefs.setString("userId", loggedInUser.userId.toString());
+
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/home',
+          (Route<dynamic> route) => false, // This predicate removes all routes
+        );
       } else {
         // Handle API success but invalid credentials/missing data
         setState(() {

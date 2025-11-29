@@ -1,4 +1,5 @@
 import 'package:campify/modules/auth/presentation/pages/login_page.dart';
+import 'package:campify/modules/auth/presentation/pages/userProfilePage.dart';
 import 'package:campify/modules/home/homePage.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +19,7 @@ abstract class AppRoutes {
   static const String signUp = '/auth/signUp';
   static const String login = '/auth/login';
   static const String license = '/auth/license';
+  static const String userProfile = '/auth/userProfile';
 
   // --- Other Module Routes (Examples) ---
   static const String home = '/home';
@@ -39,9 +41,11 @@ abstract class AppRoutes {
     // Placeholder for the Owner/License Screen
     license: (context) => LicenseVerificationPage(),
 
-    // --- Other Module Routes (Examples) ---
+    userProfile: (context) => UserProfilePage(),
+
     // Example: A main tab screen after successful login
     home: (context) => HomePage(),
+
     marketplace: (context) => const Placeholder(child: Text('Marketplace Screen')),
   };
 }
