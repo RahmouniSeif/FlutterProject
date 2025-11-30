@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui'; // Needed for ImageFilter.blur in BackdropFilter
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../config/routes/app_routes.dart';
 
 // --- COLOR PALETTE (From Tailwind Config) ---
 const Color primary = Color(0xFF386641); // Rich green
@@ -23,38 +24,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'CampConnect',
-      theme: ThemeData(
-        // NOTE: 'Plus Jakarta Sans' needs to be added to pubspec.yaml and assets
-        fontFamily: 'Plus Jakarta Sans',
-        primaryColor: primary,
-        scaffoldBackgroundColor: backgroundLight,
-        brightness: Brightness.light,
-        colorScheme: ColorScheme.light(
-          primary: primary,
-          secondary: secondary,
-          surface: cardLight,
-          background: backgroundLight,
-        ),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        fontFamily: 'Plus Jakarta Sans',
-        primaryColor: primary,
-        scaffoldBackgroundColor: backgroundDark,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.dark(
-          primary: primary,
-          secondary: secondary,
-          surface: cardDark,
-          background: backgroundDark,
-        ),
-        useMaterial3: true,
-      ),
-      home: const HomeScreen(),
-    );
+    return const HomeScreen();
   }
 }
 
@@ -101,7 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // Determine if we are in dark mode for dynamic colors
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final primaryTextColor = isDarkMode ? textDarkPrimary : textLightPrimary;
-    final secondaryTextColor = isDarkMode ? textDarkSecondary : textLightSecondary;
+    final secondaryTextColor =
+        isDarkMode ? textDarkSecondary : textLightSecondary;
     final cardColor = isDarkMode ? cardDark : cardLight;
 
     // Apply transparent status bar
@@ -138,7 +109,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Image.network(
                 'https://lh3.googleusercontent.com/aida-public/AB6AXuAR3_YtJ7r01cOw6uuPrhbHamZ4K2ZY0VlHgbadI6CJNEILTd36oV27j1o0w4a8LvYFR2uDSNAu7S2HFkeTejc_fmSBXLhNm86VSyAUQ94cNAquAugzguJ7YZl0Y3ERRbKkij4FMkM_z4hH2wpnj7UQBH9bqQVrn5xyrAOFDDAcmBe7OU6n_pIwAwiBndRxDcWkiXQ_PeDb743uwgeFZ283HgbZgWewjfmEbj6NHaX-YjA-rdG4UChOX9awKJvKKVfoYjd9gMdM0nni',
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(color: primary, child: const Center(child: Text("Forest View", style: TextStyle(color: Colors.white)))),
+                errorBuilder: (context, error, stackTrace) => Container(
+                    color: primary,
+                    child: const Center(
+                        child: Text("Forest View",
+                            style: TextStyle(color: Colors.white)))),
               ),
             ),
           ),
@@ -157,17 +132,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       right: 16.0,
                       bottom: 16.0,
                     ),
-                    child: _buildHeader(primaryTextColor, this._userNmae), // Pass _userName from state
+                    child: _buildHeader(primaryTextColor,
+                        this._userNmae), // Pass _userName from state
                   ),
                   // Search Bar
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: _buildSearchBar(cardColor, secondaryTextColor, primary),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    child:
+                        _buildSearchBar(cardColor, secondaryTextColor, primary),
                   ),
                   // Categories Grid
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                    child: _buildCategoriesGrid(cardColor, primary, secondaryTextColor),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 16.0),
+                    child: _buildCategoriesGrid(
+                        cardColor, primary, secondaryTextColor),
                   ),
                   // Nearby Section
                   _buildSectionHeader(context, 'Nearby You', primary),
@@ -175,9 +155,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildHorizontalCampsiteList(context),
                   const SizedBox(height: 24.0),
                   // Activities Section
-                  _buildSectionHeader(context, 'Popular Activities', primary, showSeeAll: false),
+                  _buildSectionHeader(context, 'Popular Activities', primary,
+                      showSeeAll: false),
                   const SizedBox(height: 8.0),
-                  _buildActivityList(cardColor, primaryTextColor, secondaryTextColor),
+                  _buildActivityList(
+                      cardColor, primaryTextColor, secondaryTextColor),
+
+                  const SizedBox(height: 24.0),
+                  // Equipment Section
+                  _buildSectionHeader(context, 'Equipment', primary,
+                      showSeeAll: false),
+                  const SizedBox(height: 8.0),
+                  _buildEquipmentList(
+                      context, cardColor, primaryTextColor, secondaryTextColor),
+
                   // Space for Bottom Navigation Bar
                   const SizedBox(height: 100.0),
                 ],
@@ -238,7 +229,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Image.network(
               'https://lh3.googleusercontent.com/aida-public/AB6AXuAVpYf51q-0ZxpUMdlqPGwFUGUrlR6LenzE0ENfWEPxSTRJM7-_46RBXtpR7KWi_cUyuOySXSfEQfQMIOrP0qPKc_J2BgGW4gy4AjHc8aPotOkVWUg8oae0PjXZ7g42SlDKzMc9b6zS1mh-AQfWkrCtemLrbx26GxVtfkEZfVe1i5An5jEuAJUF9ksy45EAj6G-i4zlr9G4uDk1bFH4rdgH0h5a71JQ_n-YUN577D8dE546dqpRNGXzm2lGm7ka0aSUBm-eo7VwNDvg',
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: primaryTextColor),
+              errorBuilder: (context, error, stackTrace) =>
+                  Icon(Icons.person, color: primaryTextColor),
             ),
           ),
         ),
@@ -265,7 +257,8 @@ class _HomeScreenState extends State<HomeScreen> {
           prefixIcon: Icon(Icons.search, color: hintColor),
           filled: true,
           fillColor: cardColor,
-          contentPadding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 24.0),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 18.0, horizontal: 24.0),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50.0),
             borderSide: BorderSide.none,
@@ -283,7 +276,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoriesGrid(Color cardColor, Color iconColor, Color textColor) {
+  Widget _buildCategoriesGrid(
+      Color cardColor, Color iconColor, Color textColor) {
     final categories = [
       {'name': 'Mountains', 'icon': Icons.filter_hdr},
       {'name': 'Forests', 'icon': Icons.forest},
@@ -319,7 +313,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              child: Icon(category['icon'] as IconData, size: 32, color: iconColor),
+              child: Icon(category['icon'] as IconData,
+                  size: 32, color: iconColor),
             ),
             const SizedBox(height: 8.0),
             Text(
@@ -337,7 +332,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, Color accentColor, {bool showSeeAll = true}) {
+  Widget _buildSectionHeader(
+      BuildContext context, String title, Color accentColor,
+      {bool showSeeAll = true}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
@@ -396,7 +393,8 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, index) {
           final campsite = campsites[index];
           return Padding(
-            padding: EdgeInsets.only(right: index < campsites.length - 1 ? 16.0 : 0),
+            padding:
+                EdgeInsets.only(right: index < campsites.length - 1 ? 16.0 : 0),
             child: SizedBox(
               width: MediaQuery.of(context).size.width * 0.66, // w-2/3
               child: ClipRRect(
@@ -408,7 +406,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,
-                      errorBuilder: (context, error, stackTrace) => Container(color: secondary, child: Center(child: Text(campsite['name']!, style: const TextStyle(color: Colors.white)))),
+                      errorBuilder: (context, error, stackTrace) => Container(
+                          color: secondary,
+                          child: Center(
+                              child: Text(campsite['name']!,
+                                  style:
+                                      const TextStyle(color: Colors.white)))),
                     ),
                     Container(
                       decoration: BoxDecoration(
@@ -457,7 +460,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildActivityList(Color cardColor, Color primaryTextColor, Color secondaryTextColor) {
+  Widget _buildActivityList(
+      Color cardColor, Color primaryTextColor, Color secondaryTextColor) {
     final activities = [
       {
         'title': 'Hiking',
@@ -500,7 +504,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 64,
                     height: 64,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(width: 64, height: 64, color: accent, child: const Center(child: Icon(Icons.terrain, color: cardLight))),
+                    errorBuilder: (context, error, stackTrace) => Container(
+                        width: 64,
+                        height: 64,
+                        color: accent,
+                        child: const Center(
+                            child: Icon(Icons.terrain, color: cardLight))),
                   ),
                 ),
                 title: Text(
@@ -529,9 +538,89 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildEquipmentList(BuildContext context, Color cardColor,
+      Color primaryTextColor, Color secondaryTextColor) {
+    final items = [
+      {
+        'title': 'Rent Equipment',
+        'subtitle': 'Tents, sleeping bags, and more',
+        'icon': Icons.night_shelter,
+        'route': AppRoutes.rentalCatalog,
+      },
+      {
+        'title': 'Buy Gear',
+        'subtitle': 'New and used camping gear',
+        'icon': Icons.shopping_bag,
+        'route': AppRoutes.salesCatalog,
+      },
+      {
+        'title': 'Manage Inventory',
+        'subtitle': 'Admin access only',
+        'icon': Icons.inventory,
+        'route': AppRoutes.inventory,
+      },
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        children: items.map((item) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(12.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(8.0),
+                leading: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: secondary.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child:
+                      Icon(item['icon'] as IconData, color: primary, size: 32),
+                ),
+                title: Text(
+                  item['title'] as String,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: primaryTextColor,
+                  ),
+                ),
+                subtitle: Text(
+                  item['subtitle'] as String,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: secondaryTextColor,
+                  ),
+                ),
+                trailing: Icon(Icons.chevron_right, color: secondaryTextColor),
+                onTap: () {
+                  Navigator.pushNamed(context, item['route'] as String);
+                },
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildBottomNavBar(bool isDarkMode) {
     // Colors dynamically change based on theme
-    final navBackgroundColor = isDarkMode ? cardDark.withOpacity(0.8) : cardLight.withOpacity(0.8);
+    final navBackgroundColor =
+        isDarkMode ? cardDark.withOpacity(0.8) : cardLight.withOpacity(0.8);
     final navBorderColor = isDarkMode ? Colors.grey[700] : Colors.grey[200];
     final inactiveColor = isDarkMode ? textDarkSecondary : textLightSecondary;
 
@@ -558,7 +647,8 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildNavItem(Icons.home, 'Home', primary, true),
                 _buildNavItem(Icons.map, 'Discover', inactiveColor, false),
-                _buildNavItem(Icons.favorite, 'Favorites', inactiveColor, false),
+                _buildNavItem(
+                    Icons.favorite, 'Favorites', inactiveColor, false),
                 _buildNavItem(Icons.person, 'Profile', inactiveColor, false),
               ],
             ),
@@ -568,7 +658,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, Color color, bool isSelected) {
+  Widget _buildNavItem(
+      IconData icon, String label, Color color, bool isSelected) {
     return InkWell(
       onTap: () {
         // Handle navigation
