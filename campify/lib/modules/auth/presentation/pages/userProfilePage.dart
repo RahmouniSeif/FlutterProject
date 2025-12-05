@@ -5,43 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:campify/GeneratedServices/api.dart'; // Assumed import
 import '../../../../config/routes/app_routes.dart';
 import '../../../../core/utils/globals.dart'; // Assumed import
-
-// =========================================================================
-// ASSUMED EXTERNAL DEPENDENCIES & PLACEHOLDERS
-// =========================================================================
-
-// Placeholder for necessary API client setup
-class QueryParam {}
-
-class ApiException implements Exception {
-  final int code;
-  final String message;
-  ApiException(this.code, this.message);
-}
-
-// Assume this is available globally or imported
-Future<List<int>> _decodeBodyBytes(http.Response response) async => response.bodyBytes;
-final defaultApiClient = ApiClient();
-final dynamic globals = null;
-
-// Placeholder for the external `ApiClient` implementation
-class ApiClient {
-  Future<dynamic> primeHeaders() async {
-    return ApiClient();
-  }
-
-  Future<http.Response> invokeAPI(String path, String method, List<dynamic> queryParams, Object? postBody, Map<String, String> headerParams, Map<String, String> formParams, String? contentType) async {
-    if (path.contains('/api/v1/users/') && method == 'PUT') {
-      return http.Response('{"message": "User updated"}', 200);
-    }
-    throw UnimplementedError('ApiClient.invokeAPI is not implemented.');
-  }
-
-  Future<T> deserializeAsync<T>(dynamic body, String targetType) async {
-    throw UnimplementedError('ApiClient.deserializeAsync is not implemented.');
-  }
-}
-
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 // =========================================================================
 // COLOR PALETTE (Unchanged)
 // =========================================================================
@@ -70,9 +36,11 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> {
   final _formKey = GlobalKey<FormState>();
   User? _user;
+  Attachment? _attachment;
   bool _isLoading = true;
   String? _error;
   bool _isEditing = false; // New state to toggle edit mode
+  var _image = null;
 
   // Controllers for editable fields
   late TextEditingController _nameController;
@@ -111,11 +79,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
       }
       final apiClient = await primeHeaders();
       final userControllerApi = UserManagementApi(apiClient);
+      final attachementControllerApi = AttachmentControllerApi(apiClient);
+
+      final Attachment? attachment = await attachementControllerApi.getAttachmentByUserIdAndAttachmentType(userId, "profile");
       final User? fetchedUser = await userControllerApi.getUserById(userId);
 
       if (mounted) {
         setState(() {
           _user = fetchedUser;
+          _attachment = attachment;
           // Set controller values upon loading/refresh
           _nameController.text = _user?.name ?? '';
           _emailController.text = _user?.email ?? '';
@@ -253,7 +225,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ProfileHeader(user: _user!),
+                    ProfileHeader(user: _user!, attachment: _attachment!),
                     const SizedBox(height: 8),
                     _buildSectionTitle('Personal Information'),
                     _buildPersonalInformationCard(), // Use new inline fields
@@ -281,9 +253,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         });
                       },
                     ),
-                    // const SizedBox(height: 8),
-                    // // New Logout Button
-                    // LogoutButton(onPressed: _logout),
                   ],
                 ),
               ),
@@ -384,9 +353,28 @@ class _UserProfilePageState extends State<UserProfilePage> {
 // SUB-WIDGETS (Updated ActionButton for simplicity)
 // =========================================================================
 
-class ProfileHeader extends StatelessWidget {
+class ProfileHeader extends StatefulWidget {
   final User user;
-  const ProfileHeader({super.key, required this.user});
+  final Attachment? attachment;
+
+  const ProfileHeader({super.key, required this.user, this.attachment});
+
+  @override
+  State<ProfileHeader> createState() => _ProfileHeaderState();
+}
+
+class _ProfileHeaderState extends State<ProfileHeader> {
+  String? base64Image;
+
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.attachment != null) {
+      base64Image = widget.attachment?.attachedFile; // initialize with existing image
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -399,29 +387,107 @@ class ProfileHeader extends StatelessWidget {
             Stack(
               alignment: Alignment.bottomRight,
               children: [
-                const CircleAvatar(
-                  radius: 64,
-                  backgroundImage: NetworkImage(
-                      'https://lh3.googleusercontent.com/aida-public/AB6AXuD00w5y3hHAx5wGgMsTX2yEVcGH-VfD982dn8d9L5-etwPUjv0YQn59pIhmgf_Gfg0su18ObcHnEEo4n5csQ9sQDO8Wg0IF_cCAIO6hTtpLd-vJ-hKe-o-FysAH_YgoqVhAe1sUZrb2Y8nPAu7GfIaT3UGQrNOr8qU-sp72PRo_Ct-g3f4-M_NIEQDvv8_O9dkwhwCkpfWEIlmCNoBLxbn9PJadknGjpxkeC_yPJGTvIWrJklKS-rbxgL5Go3bNFTXnPOUCW5eFROS6'),
-                  backgroundColor: AppColors.borderLight,
-                ),
+                SafeAvatar(base64Image: base64Image),
                 Positioned(
                   right: 0,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                    child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                  bottom: 0,
+                  child: GestureDetector(
+                    onTap: _showImageSourceBottomSheet,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16.0),
-            Text(user.name ?? 'Guest User', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight)),
+            Text(
+              widget.user.name ?? 'Guest User',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  void _showImageSourceBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 50,
+                  height: 5,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library, color: Colors.green),
+                  title: const Text('Choose from Gallery'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt, color: Colors.blue),
+                  title: const Text('Take Photo'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
+      if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        base64Image = base64Encode(bytes);
+        widget.attachment?.attachedFile = base64Image;
+        final apiClient = await primeHeaders();
+        final attachementControllerApi = AttachmentControllerApi(apiClient);
+        var res = await attachementControllerApi.updateAttachment(widget.attachment!.id!, widget.attachment!);
+        if (res != null) {
+          setState(() {
+            base64Image = base64Encode(bytes); // store image as Base64
+          });
+        }
+        setState(() {
+          base64Image = base64Encode(bytes); // store image as Base64
+        });
+
+        // TODO: send base64Image to backend to save
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
   }
 }
 
@@ -468,6 +534,45 @@ class LogoutButton extends StatelessWidget {
         ),
         child: const Text('Logout', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
       ),
+    );
+  }
+}
+
+class SafeAvatar extends StatelessWidget {
+  final String? base64Image; // can be null or empty
+
+  const SafeAvatar({this.base64Image, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    ImageProvider avatarImage;
+
+    if (base64Image != null && base64Image!.isNotEmpty) {
+      try {
+        // Remove data URI prefix if present
+        final base64Str = base64Image!.contains(',') ? base64Image!.split(',').last : base64Image!;
+
+        // Decode Base64
+        Uint8List imageBytes = base64Decode(base64Str);
+
+        avatarImage = MemoryImage(imageBytes);
+      } catch (e) {
+        // If decoding fails, fallback to default avatar
+        avatarImage = const NetworkImage(
+          'https://lh3.googleusercontent.com/aida-public/AB6AXuD00w5y3hHAx5wGgMsTX2yEVcGH-VfD982dn8d9L5-etwPUjv0YQn59pIhmgf_Gfg0su18ObcHnEEo4n5csQ9sQDO8Wg0IF_cCAIO6hTtpLd-vJ-hKe-o-FysAH_YgoqVhAe1sUZrb2Y8nPAu7GfIaT3UGQrNOr8qU-sp72PRo_Ct-g3f4-M_NIEQDvv8_O9dkwhwCkpfWEIlmCNoBLxbn9PJadknGjpxkeC_yPJGTvIWrJklKS-rbxgL5Go3bNFTXnPOUCW5eFROS6',
+        );
+      }
+    } else {
+      // Null or empty: use default avatar
+      avatarImage = const NetworkImage(
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuD00w5y3hHAx5wGgMsTX2yEVcGH-VfD982dn8d9L5-etwPUjv0YQn59pIhmgf_Gfg0su18ObcHnEEo4n5csQ9sQDO8Wg0IF_cCAIO6hTtpLd-vJ-hKe-o-FysAH_YgoqVhAe1sUZrb2Y8nPAu7GfIaT3UGQrNOr8qU-sp72PRo_Ct-g3f4-M_NIEQDvv8_O9dkwhwCkpfWEIlmCNoBLxbn9PJadknGjpxkeC_yPJGTvIWrJklKS-rbxgL5Go3bNFTXnPOUCW5eFROS6',
+      );
+    }
+
+    return CircleAvatar(
+      radius: 64,
+      backgroundImage: avatarImage,
+      backgroundColor: Colors.grey[200], // fallback background
     );
   }
 }

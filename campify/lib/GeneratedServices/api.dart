@@ -28,9 +28,11 @@ part 'auth/http_basic_auth.dart';
 part 'auth/http_bearer_auth.dart';
 
 part 'api/adm_license_controller_api.dart';
+part 'api/attachment_controller_api.dart';
 part 'api/user_management_api.dart';
 
 part 'model/adm_license.dart';
+part 'model/attachment.dart';
 part 'model/license_check_response.dart';
 part 'model/login_request.dart';
 part 'model/user.dart';

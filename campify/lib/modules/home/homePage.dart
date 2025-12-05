@@ -1,3 +1,5 @@
+import 'package:campify/config/routes/app_routes.dart';
+import 'package:campify/modules/auth/presentation/pages/login_page.dart';
 import 'package:campify/modules/auth/presentation/pages/userProfilePage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,38 +26,39 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'CampConnect',
-      theme: ThemeData(
-        // NOTE: 'Plus Jakarta Sans' needs to be added to pubspec.yaml and assets
-        fontFamily: 'Plus Jakarta Sans',
-        primaryColor: primary,
-        scaffoldBackgroundColor: backgroundLight,
-        brightness: Brightness.light,
-        colorScheme: ColorScheme.light(
-          primary: primary,
-          secondary: secondary,
-          surface: cardLight,
-          background: backgroundLight,
-        ),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        fontFamily: 'Plus Jakarta Sans',
-        primaryColor: primary,
-        scaffoldBackgroundColor: backgroundDark,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.dark(
-          primary: primary,
-          secondary: secondary,
-          surface: cardDark,
-          background: backgroundDark,
-        ),
-        useMaterial3: true,
-      ),
-      home: const HomeScreen(),
-    );
+    return const HomeScreen();
+    // return MaterialApp(
+    //   debugShowCheckedModeBanner: false,
+    //   title: 'CampConnect',
+    //   theme: ThemeData(
+    //     // NOTE: 'Plus Jakarta Sans' needs to be added to pubspec.yaml and assets
+    //     fontFamily: 'Plus Jakarta Sans',
+    //     primaryColor: primary,
+    //     scaffoldBackgroundColor: backgroundLight,
+    //     brightness: Brightness.light,
+    //     colorScheme: ColorScheme.light(
+    //       primary: primary,
+    //       secondary: secondary,
+    //       surface: cardLight,
+    //       background: backgroundLight,
+    //     ),
+    //     useMaterial3: true,
+    //   ),
+    //   darkTheme: ThemeData(
+    //     fontFamily: 'Plus Jakarta Sans',
+    //     primaryColor: primary,
+    //     scaffoldBackgroundColor: backgroundDark,
+    //     brightness: Brightness.dark,
+    //     colorScheme: ColorScheme.dark(
+    //       primary: primary,
+    //       secondary: secondary,
+    //       surface: cardDark,
+    //       background: backgroundDark,
+    //     ),
+    //     useMaterial3: true,
+    //   ),
+    //   home: const HomeScreen(),
+    // );
   }
 }
 
@@ -158,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       right: 16.0,
                       bottom: 16.0,
                     ),
-                    child: _buildHeader(primaryTextColor, this._userNmae), // Pass _userName from state
+                    child: _buildHeader(primaryTextColor, this._userNmae, context), // Pass _userName from state
                   ),
                   // Search Bar
                   Padding(
@@ -193,8 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Updated to accept the user name as a parameter
-  Widget _buildHeader(Color primaryTextColor, String userName) {
-    // Header is styled to stand out against the background image (white text)
+  Widget _buildHeader(Color primaryTextColor, String userName, BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -206,7 +208,6 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(fontSize: 16, color: Colors.white70),
             ),
             Text(
-              // Use the state variable
               userName,
               style: const TextStyle(
                 fontSize: 24,
@@ -217,29 +218,45 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        Container(
-          height: 48,
-          width: 48,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24.0),
-            color: Colors.white.withOpacity(0.2),
-            border: Border.all(color: Colors.white54, width: 1.5),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                offset: Offset(0, 4),
+
+        // RIGHT SIDE : Profile + Logout Button
+        Row(
+          children: [
+            // PROFILE IMAGE
+            Container(
+              height: 48,
+              width: 48,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24.0),
+                color: Colors.white.withOpacity(0.2),
+                border: Border.all(color: Colors.white54, width: 1.5),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: ClipOval(
-            child: Image.network(
-              'https://lh3.googleusercontent.com/aida-public/AB6AXuAVpYf51q-0ZxpUMdlqPGwFUGUrlR6LenzE0ENfWEPxSTRJM7-_46RBXtpR7KWi_cUyuOySXSfEQfQMIOrP0qPKc_J2BgGW4gy4AjHc8aPotOkVWUg8oae0PjXZ7g42SlDKzMc9b6zS1mh-AQfWkrCtemLrbx26GxVtfkEZfVe1i5An5jEuAJUF9ksy45EAj6G-i4zlr9G4uDk1bFH4rdgH0h5a71JQ_n-YUN577D8dE546dqpRNGXzm2lGm7ka0aSUBm-eo7VwNDvg',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: primaryTextColor),
+              child: ClipOval(
+                child: Image.network(
+                  'https://lh3.googleusercontent.com/aida-public/AB6AXuAVpYf51q-0ZxpUMdlqPGwFUGUrlR6LenzE0ENfWEPxSTRJM7-_46RBXtpR7KWi_cUyuOySXSfEQfQMIOrP0qPKc_J2BgGW4gy4AjHc8aPotOkVWUg8oae0PjXZ7g42SlDKzMc9b6zS1mh-AQfWkrCtemLrbx26GxVtfkEZfVe1i5An5jEuAJUF9ksy45EAj6G-i4zlr9G4uDk1bFH4rdgH0h5a71JQ_n-YUN577D8dE546dqpRNGXzm2lGm7ka0aSUBm-eo7VwNDvg',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: primaryTextColor),
+                ),
+              ),
             ),
-          ),
-        ),
+
+            const SizedBox(width: 10),
+
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white, size: 26),
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, AppRoutes.login);
+              },
+            ),
+          ],
+        )
       ],
     );
   }

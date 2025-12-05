@@ -192,6 +192,8 @@ class ApiClient {
           return valueString == 'true' || valueString == '1';
         case 'AdmLicense':
           return AdmLicense.fromJson(value);
+        case 'Attachment':
+          return Attachment.fromJson(value);
         case 'LicenseCheckResponse':
           return LicenseCheckResponse.fromJson(value);
         case 'LoginRequest':
