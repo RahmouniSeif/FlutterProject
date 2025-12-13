@@ -81,8 +81,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
       final userControllerApi = UserManagementApi(apiClient);
       final attachementControllerApi = AttachmentControllerApi(apiClient);
 
-      final Attachment? attachment = await attachementControllerApi.getAttachmentByUserIdAndAttachmentType(userId, "profile");
       final User? fetchedUser = await userControllerApi.getUserById(userId);
+      Attachment? attachment;
+      try {
+        attachment = await attachementControllerApi.getAttachmentByUserIdAndAttachmentType(userId, "profile");
+      } catch (e) {
+        print("No profile image found or error fetching it: $e");
+        attachment = null;
+      }
 
       if (mounted) {
         setState(() {
@@ -225,7 +231,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ProfileHeader(user: _user!, attachment: _attachment!),
+                    ProfileHeader(user: _user!, attachment: _attachment),
                     const SizedBox(height: 8),
                     _buildSectionTitle('Personal Information'),
                     _buildPersonalInformationCard(), // Use new inline fields
@@ -253,6 +259,23 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         });
                       },
                     ),
+                    const SizedBox(height: 12),
+                    // Change Password Button
+                    if (!_isEditing)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: OutlinedButton(
+                          onPressed: () {
+                            _showChangePasswordDialog(context);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 56),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                            side: const BorderSide(color: AppColors.primary),
+                          ),
+                          child: const Text('Change Password', style: TextStyle(color: AppColors.primary, fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -347,6 +370,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
       ),
     );
   }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ChangePasswordDialog(user: _user!);
+      },
+    );
+  }
 }
 
 // =========================================================================
@@ -365,14 +397,16 @@ class ProfileHeader extends StatefulWidget {
 
 class _ProfileHeaderState extends State<ProfileHeader> {
   String? base64Image;
+  Attachment? _currentAttachment;
 
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    if (widget.attachment != null) {
-      base64Image = widget.attachment?.attachedFile; // initialize with existing image
+    _currentAttachment = widget.attachment;
+    if (_currentAttachment != null) {
+      base64Image = _currentAttachment?.attachedFile; // initialize with existing image
     }
   }
 
@@ -469,24 +503,259 @@ class _ProfileHeaderState extends State<ProfileHeader> {
       final XFile? pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
       if (pickedFile != null) {
         final bytes = await pickedFile.readAsBytes();
-        base64Image = base64Encode(bytes);
-        widget.attachment?.attachedFile = base64Image;
-        final apiClient = await primeHeaders();
-        final attachementControllerApi = AttachmentControllerApi(apiClient);
-        var res = await attachementControllerApi.updateAttachment(widget.attachment!.id!, widget.attachment!);
-        if (res != null) {
-          setState(() {
-            base64Image = base64Encode(bytes); // store image as Base64
-          });
-        }
+        final newBase64Image = base64Encode(bytes);
+
         setState(() {
-          base64Image = base64Encode(bytes); // store image as Base64
+          base64Image = newBase64Image; // Optimistic update
         });
 
-        // TODO: send base64Image to backend to save
+        final apiClient = await primeHeaders();
+        final attachementControllerApi = AttachmentControllerApi(apiClient);
+
+        if (_currentAttachment == null) {
+          // --- CREATE NEW ATTACHMENT ---
+          final newAttachment = Attachment(
+            userId: widget.user.userId,
+            attachedFile: newBase64Image,
+            attachmentType: 'profile',
+            createdDate: DateTime.now(),
+          );
+          try {
+            final created = await attachementControllerApi.createAttachment(newAttachment);
+            if (mounted && created != null) {
+              setState(() {
+                _currentAttachment = created;
+              });
+            }
+          } catch (e) {
+            print('Error creating attachment: $e');
+            // Revert on error if necessary, or show snackbar
+          }
+        } else {
+          // --- UPDATE EXISTING ATTACHMENT ---
+          _currentAttachment!.attachedFile = newBase64Image;
+          try {
+            await attachementControllerApi.updateAttachment(_currentAttachment!.id!, _currentAttachment!);
+          } catch (e) {
+            print('Error updating attachment: $e');
+          }
+        }
       }
     } catch (e) {
       print('Error picking image: $e');
+    }
+  }
+}
+
+class ChangePasswordDialog extends StatefulWidget {
+  final User user;
+
+  const ChangePasswordDialog({super.key, required this.user});
+
+  @override
+  State<ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
+  final _oldPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  bool _isOldPasswordVisible = false;
+  bool _isNewPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+
+  @override
+  void dispose() {
+    _oldPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: AppColors.surfaceLight,
+      elevation: 8,
+      child: Container(
+        padding: const EdgeInsets.all(24.0),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header Icon
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.lock_rounded, color: AppColors.primary, size: 32),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Change Password',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight),
+                ),
+                const SizedBox(height: 24),
+                if (_errorMessage != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 13))),
+                      ],
+                    ),
+                  ),
+
+                // Fields
+                _buildPasswordField(
+                  controller: _oldPasswordController,
+                  label: 'Old Password',
+                  isVisible: _isOldPasswordVisible,
+                  onToggleVisibility: () => setState(() => _isOldPasswordVisible = !_isOldPasswordVisible),
+                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+                _buildPasswordField(
+                  controller: _newPasswordController,
+                  label: 'New Password',
+                  isVisible: _isNewPasswordVisible,
+                  onToggleVisibility: () => setState(() => _isNewPasswordVisible = !_isNewPasswordVisible),
+                  validator: (v) => v == null || v.length < 6 ? 'Min 6 characters' : null,
+                ),
+                const SizedBox(height: 16),
+                _buildPasswordField(
+                  controller: _confirmPasswordController,
+                  label: 'Confirm New Password',
+                  isVisible: _isConfirmPasswordVisible,
+                  onToggleVisibility: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Required';
+                    if (v != _newPasswordController.text) return 'Passwords do not match';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 32),
+
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          side: const BorderSide(color: Colors.grey),
+                        ),
+                        child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _handleChangePassword,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                        ),
+                        child: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String label,
+    required bool isVisible,
+    required VoidCallback onToggleVisibility,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: !isVisible,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: AppColors.textSecondaryLight),
+        filled: true,
+        fillColor: AppColors.backgroundLight,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        suffixIcon: IconButton(
+          icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: AppColors.primary),
+          onPressed: onToggleVisibility,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+      validator: validator,
+    );
+  }
+
+  Future<void> _handleChangePassword() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final apiClient = await primeHeaders();
+      final userControllerApi = UserManagementApi(apiClient);
+
+      final requestBody = {
+        'oldPassword': _oldPasswordController.text,
+        'newPassword': _newPasswordController.text,
+      };
+
+      await userControllerApi.changePassword(widget.user.userId!, requestBody);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password changed successfully!'),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Failed: ${e.message ?? "Unknown error"}';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'An unexpected error occurred';
+        });
+      }
     }
   }
 }

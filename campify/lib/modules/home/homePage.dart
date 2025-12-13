@@ -222,39 +222,60 @@ class _HomeScreenState extends State<HomeScreen> {
         // RIGHT SIDE : Profile + Logout Button
         Row(
           children: [
-            // PROFILE IMAGE
+            // // PROFILE IMAGE
+            // Container(
+            //   height: 48,
+            //   width: 48,
+            //   decoration: BoxDecoration(
+            //     borderRadius: BorderRadius.circular(24.0),
+            //     color: Colors.white.withOpacity(0.2),
+            //     border: Border.all(color: Colors.white54, width: 1.5),
+            //     boxShadow: const [
+            //       BoxShadow(
+            //         color: Colors.black12,
+            //         blurRadius: 10,
+            //         offset: Offset(0, 4),
+            //       ),
+            //     ],
+            //   ),
+            //   child: ClipOval(
+            //     child: Image.network(
+            //       'https://lh3.googleusercontent.com/aida-public/AB6AXuAVpYf51q-0ZxpUMdlqPGwFUGUrlR6LenzE0ENfWEPxSTRJM7-_46RBXtpR7KWi_cUyuOySXSfEQfQMIOrP0qPKc_J2BgGW4gy4AjHc8aPotOkVWUg8oae0PjXZ7g42SlDKzMc9b6zS1mh-AQfWkrCtemLrbx26GxVtfkEZfVe1i5An5jEuAJUF9ksy45EAj6G-i4zlr9G4uDk1bFH4rdgH0h5a71JQ_n-YUN577D8dE546dqpRNGXzm2lGm7ka0aSUBm-eo7VwNDvg',
+            //       fit: BoxFit.cover,
+            //       errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: primaryTextColor),
+            //     ),
+            //   ),
+            // ),
+
+            const SizedBox(width: 10),
             Container(
-              height: 48,
-              width: 48,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24.0),
-                color: Colors.white.withOpacity(0.2),
-                border: Border.all(color: Colors.white54, width: 1.5),
-                boxShadow: const [
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Colors.redAccent, Colors.deepOrange],
+                ),
+                boxShadow: [
                   BoxShadow(
-                    color: Colors.black12,
+                    color: Colors.red.withOpacity(0.4),
                     blurRadius: 10,
-                    offset: Offset(0, 4),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: ClipOval(
-                child: Image.network(
-                  'https://lh3.googleusercontent.com/aida-public/AB6AXuAVpYf51q-0ZxpUMdlqPGwFUGUrlR6LenzE0ENfWEPxSTRJM7-_46RBXtpR7KWi_cUyuOySXSfEQfQMIOrP0qPKc_J2BgGW4gy4AjHc8aPotOkVWUg8oae0PjXZ7g42SlDKzMc9b6zS1mh-AQfWkrCtemLrbx26GxVtfkEZfVe1i5An5jEuAJUF9ksy45EAj6G-i4zlr9G4uDk1bFH4rdgH0h5a71JQ_n-YUN577D8dE546dqpRNGXzm2lGm7ka0aSUBm-eo7VwNDvg',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: primaryTextColor),
-                ),
+              child: IconButton(
+                icon: const Icon(Icons.logout_rounded),
+                color: Colors.white,
+                iconSize: 26,
+                tooltip: 'Logout',
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    AppRoutes.login,
+                    (route) => false,
+                  );
+                },
               ),
-            ),
-
-            const SizedBox(width: 10),
-
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.white, size: 26),
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, AppRoutes.login);
-              },
-            ),
+            )
           ],
         )
       ],

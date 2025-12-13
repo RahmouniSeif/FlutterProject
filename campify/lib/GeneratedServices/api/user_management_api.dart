@@ -16,6 +16,67 @@ class UserManagementApi {
 
   final ApiClient apiClient;
 
+  /// Change Password
+  ///
+  /// Changes the user's password if the old password matches.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [Map<String, String>] requestBody (required):
+  Future<Response> changePasswordWithHttpInfo(String id, Map<String, String> requestBody,) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/users/{id}/change-password'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = requestBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Change Password
+  ///
+  /// Changes the user's password if the old password matches.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [Map<String, String>] requestBody (required):
+  Future<Object?> changePassword(String id, Map<String, String> requestBody,) async {
+    final response = await changePasswordWithHttpInfo(id, requestBody,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'Object',) as Object;
+    
+    }
+    return null;
+  }
+
   /// Create New User
   ///
   /// Registers a new user in the system. Returns the created user with a 201 status.

@@ -31,6 +31,7 @@ class _LoginPageState extends State<LoginPage> {
   // 🔄 State variables for UI feedback
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isPasswordVisible = false;
 
   // ⚙️ Function to handle the login process and API call
   Future<void> _handleLogin() async {
@@ -239,6 +240,12 @@ class _LoginPageState extends State<LoginPage> {
                                     hint: 'Enter your password',
                                     icon: Icons.lock_outline,
                                     isPassword: true,
+                                    isPasswordVisible: _isPasswordVisible,
+                                    onVisibilityToggle: () {
+                                      setState(() {
+                                        _isPasswordVisible = !_isPasswordVisible;
+                                      });
+                                    },
                                   ),
 
                                   // --- Forgot Password Link ---
@@ -345,28 +352,29 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // 4. Back Button (Top Left) with Backdrop Blur
-          Positioned(
-            top: 50,
-            left: 24,
-            child: ClipOval(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1), // Translucent white background
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: lightTextColor, size: 28),
-                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          // 4. Back Button (Top Left) with Backdrop Blur - Only show if we can pop
+          if (Navigator.of(context).canPop())
+            Positioned(
+              top: 50,
+              left: 24,
+              child: ClipOval(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1), // Translucent white background
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: lightTextColor, size: 28),
+                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -379,6 +387,8 @@ class _LoginPageState extends State<LoginPage> {
     required String hint,
     required IconData icon,
     required bool isPassword,
+    bool isPasswordVisible = false,
+    VoidCallback? onVisibilityToggle,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Column(
@@ -391,7 +401,7 @@ class _LoginPageState extends State<LoginPage> {
         const SizedBox(height: 8),
         TextField(
           controller: controller, // Linked controller
-          obscureText: isPassword,
+          obscureText: isPassword && !isPasswordVisible,
           keyboardType: keyboardType,
           style: const TextStyle(color: darkTextColor),
           decoration: InputDecoration(
@@ -399,7 +409,15 @@ class _LoginPageState extends State<LoginPage> {
             hintStyle: TextStyle(color: darkTextColor.withOpacity(0.6)),
             contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
             prefixIcon: Icon(icon, color: primaryGreen), // Icon inside the field
-            suffixIcon: isPassword ? const Icon(Icons.visibility_outlined, color: primaryGreen) : null,
+            suffixIcon: isPassword
+                ? IconButton(
+                    icon: Icon(
+                      isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      color: primaryGreen,
+                    ),
+                    onPressed: onVisibilityToggle,
+                  )
+                : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
