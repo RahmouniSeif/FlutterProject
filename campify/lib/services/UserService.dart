@@ -26,4 +26,35 @@ class UserService {
       rethrow;
     }
   }
+
+  /// Calls the API to request a password reset.
+  Future<void> forgotPassword(String email) async {
+    try {
+      final requestBody = {'email': email};
+      await _api.forgotPassword(requestBody);
+    } on ApiException catch (e) {
+      print('API Exception during forgot password: ${e.code} - ${e.message}');
+      rethrow;
+    } catch (e) {
+      print('General Exception during forgot password: $e');
+      rethrow;
+    }
+  }
+
+  /// Calls the API to reset the password using the token and new password.
+  Future<void> resetPassword(String token, String newPassword) async {
+    try {
+      final requestBody = {
+        'token': token,
+        'newPassword': newPassword,
+      };
+      await _api.resetPassword(requestBody);
+    } on ApiException catch (e) {
+      print('API Exception during reset password: ${e.code} - ${e.message}');
+      rethrow;
+    } catch (e) {
+      print('General Exception during reset password: $e');
+      rethrow;
+    }
+  }
 }

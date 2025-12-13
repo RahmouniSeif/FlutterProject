@@ -20,6 +20,8 @@ class User {
     this.password,
     this.userType,
     this.createdAt,
+    this.resetToken,
+    this.resetTokenExpiry,
   });
 
   ///
@@ -78,6 +80,22 @@ class User {
   ///
   DateTime? createdAt;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? resetToken;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  DateTime? resetTokenExpiry;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is User &&
      other.userId == userId &&
@@ -86,7 +104,9 @@ class User {
      other.phone == phone &&
      other.password == password &&
      other.userType == userType &&
-     other.createdAt == createdAt;
+     other.createdAt == createdAt &&
+     other.resetToken == resetToken &&
+     other.resetTokenExpiry == resetTokenExpiry;
 
   @override
   int get hashCode =>
@@ -97,10 +117,12 @@ class User {
     (phone == null ? 0 : phone!.hashCode) +
     (password == null ? 0 : password!.hashCode) +
     (userType == null ? 0 : userType!.hashCode) +
-    (createdAt == null ? 0 : createdAt!.hashCode);
+    (createdAt == null ? 0 : createdAt!.hashCode) +
+    (resetToken == null ? 0 : resetToken!.hashCode) +
+    (resetTokenExpiry == null ? 0 : resetTokenExpiry!.hashCode);
 
   @override
-  String toString() => 'User[userId=$userId, name=$name, email=$email, phone=$phone, password=$password, userType=$userType, createdAt=$createdAt]';
+  String toString() => 'User[userId=$userId, name=$name, email=$email, phone=$phone, password=$password, userType=$userType, createdAt=$createdAt, resetToken=$resetToken, resetTokenExpiry=$resetTokenExpiry]';
 
   Map<String, dynamic> toJson() {
     final _json = <String, dynamic>{};
@@ -124,6 +146,12 @@ class User {
     }
     if (createdAt != null) {
       _json[r'createdAt'] = createdAt!.toUtc().toIso8601String();
+    }
+    if (resetToken != null) {
+      _json[r'resetToken'] = resetToken;
+    }
+    if (resetTokenExpiry != null) {
+      _json[r'resetTokenExpiry'] = resetTokenExpiry!.toUtc().toIso8601String();
     }
     return _json;
   }
@@ -154,6 +182,8 @@ class User {
         password: mapValueOfType<String>(json, r'password'),
         userType: mapValueOfType<String>(json, r'userType'),
         createdAt: mapDateTime(json, r'createdAt', ''),
+        resetToken: mapValueOfType<String>(json, r'resetToken'),
+        resetTokenExpiry: mapDateTime(json, r'resetTokenExpiry', ''),
       );
     }
     return null;

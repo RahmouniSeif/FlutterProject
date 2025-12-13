@@ -121,6 +121,62 @@ class UserManagementApi {
     }
   }
 
+  /// Request Password Reset
+  ///
+  /// Generates a reset token and sends it to the user's email.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, String>] requestBody (required):
+  Future<Response> forgotPasswordWithHttpInfo(Map<String, String> requestBody,) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/users/forgot-password';
+
+    // ignore: prefer_final_locals
+    Object? postBody = requestBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Request Password Reset
+  ///
+  /// Generates a reset token and sends it to the user's email.
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, String>] requestBody (required):
+  Future<Object?> forgotPassword(Map<String, String> requestBody,) async {
+    final response = await forgotPasswordWithHttpInfo(requestBody,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'Object',) as Object;
+    
+    }
+    return null;
+  }
+
   /// Retrieve All Users
   ///
   /// Returns a list of all users registered in the system.
@@ -283,6 +339,54 @@ class UserManagementApi {
     
     }
     return null;
+  }
+
+  /// Reset Password
+  ///
+  /// Resets the user's password using a valid token.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, String>] requestBody (required):
+  Future<Response> resetPasswordWithHttpInfo(Map<String, String> requestBody,) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/users/reset-password';
+
+    // ignore: prefer_final_locals
+    Object? postBody = requestBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Reset Password
+  ///
+  /// Resets the user's password using a valid token.
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, String>] requestBody (required):
+  Future<void> resetPassword(Map<String, String> requestBody,) async {
+    final response = await resetPasswordWithHttpInfo(requestBody,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Update Existing User

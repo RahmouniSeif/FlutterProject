@@ -248,8 +248,7 @@ class _LoginPageState extends State<LoginPage> {
                                       onPressed: _isLoading
                                           ? null
                                           : () {
-                                              // TODO: Implement navigation to Forgot Password flow
-                                              print('Forgot Password tapped');
+                                              Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
                                             },
                                       child: const Text(
                                         'Forgot Password?',
