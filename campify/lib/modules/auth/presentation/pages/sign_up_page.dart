@@ -26,6 +26,8 @@ class _SignUpPageState extends State<SignUpPage> {
   // State variables
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   // --- Color Palette ---
   static const primaryColor = Color(0xFF537446); // Dark Green
@@ -132,6 +134,8 @@ class _SignUpPageState extends State<SignUpPage> {
     required TextEditingController controller,
     String? Function(String?)? validator,
     TextInputType keyboardType = TextInputType.text,
+    bool isVisible = false,
+    VoidCallback? onToggleVisibility,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -145,7 +149,7 @@ class _SignUpPageState extends State<SignUpPage> {
           const SizedBox(height: 8),
           TextFormField(
             controller: controller,
-            obscureText: isPassword,
+            obscureText: isPassword && !isVisible,
             keyboardType: keyboardType,
             validator: validator,
             decoration: InputDecoration(
@@ -175,7 +179,15 @@ class _SignUpPageState extends State<SignUpPage> {
               filled: true,
               fillColor: const Color(0xFFF7F7F7),
               // Conditional icon for password visibility
-              suffixIcon: isPassword ? const Icon(Icons.remove_red_eye_outlined, color: Colors.grey) : null,
+              suffixIcon: isPassword
+                  ? IconButton(
+                      icon: Icon(
+                        isVisible ? Icons.visibility : Icons.visibility_off,
+                        color: Colors.grey,
+                      ),
+                      onPressed: onToggleVisibility,
+                    )
+                  : null,
             ),
           ),
         ],
@@ -286,6 +298,12 @@ class _SignUpPageState extends State<SignUpPage> {
                   label: 'Password',
                   hint: 'Enter your password',
                   isPassword: true,
+                  isVisible: _isPasswordVisible,
+                  onToggleVisibility: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
                   controller: _passwordController,
                   validator: (value) => value!.length < 6 ? 'Password must be at least 6 characters.' : null,
                 ),
@@ -293,6 +311,12 @@ class _SignUpPageState extends State<SignUpPage> {
                   label: 'Confirm Password',
                   hint: 'Confirm your password',
                   isPassword: true,
+                  isVisible: _isConfirmPasswordVisible,
+                  onToggleVisibility: () {
+                    setState(() {
+                      _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                    });
+                  },
                   controller: _confirmPasswordController,
                   validator: (value) {
                     if (value!.isEmpty) return 'Please confirm your password.';
@@ -324,30 +348,6 @@ class _SignUpPageState extends State<SignUpPage> {
                           'Create Account',
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
-                ),
-
-                // --- Separator and Social Sign-in Buttons/Footer Links ---
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0),
-                  child: Row(
-                    children: [
-                      const Expanded(child: Divider(color: Colors.grey)),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Text('Or continue with', style: TextStyle(color: Colors.grey)),
-                      ),
-                      const Expanded(child: Divider(color: Colors.grey)),
-                    ],
-                  ),
-                ),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildSocialButton(Icons.apple),
-                    _buildSocialButton(Icons.email),
-                    _buildSocialButton(Icons.facebook),
-                  ],
                 ),
 
                 const SizedBox(height: 24),

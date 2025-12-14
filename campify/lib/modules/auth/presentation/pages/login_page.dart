@@ -289,32 +289,6 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                   ),
 
-                                  // --- Separator ---
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 32.0),
-                                    child: Row(
-                                      children: [
-                                        const Expanded(child: Divider(color: Colors.grey)),
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(horizontal: 16.0),
-                                          child: Text('Or log in with', style: TextStyle(color: Colors.grey)),
-                                        ),
-                                        const Expanded(child: Divider(color: Colors.grey)),
-                                      ],
-                                    ),
-                                  ),
-
-                                  // --- Social Sign-in Buttons ---
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      // Placeholder social buttons
-                                      _buildSocialButton('G', () => print('Google Login')),
-                                      _buildSocialButton('A', () => print('Apple Login')),
-                                      _buildSocialButton('f', () => print('Facebook Login')),
-                                    ],
-                                  ),
-
                                   const SizedBox(height: 48),
 
                                   // --- Don't have an account link ---
